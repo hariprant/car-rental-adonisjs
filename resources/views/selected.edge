@@ -1,0 +1,66 @@
+@layout('layouts/app')
+@section('main')
+
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 bg-white border-b border-gray-200">
+                    <div class="panel-bod">
+                        <table class="table">
+
+                            <!-- Table Headings -->
+                            <thead>
+                                <th>Car</th>
+                                <th>&nbsp;</th>
+                            </thead>
+
+                            <!-- Table Body -->
+                            <tbody class="max-w-full">
+                                <tr class="max-w-full">
+                                    <!-- Task Name -->
+                                    <td class="pt-5 pb-5 pr-5">
+                                        <!-- <div class=""> -->
+                                        <h1 class="sm:font-bold">{{ car.name }}</h1>
+                                        <p>{{ car.price }}</p>
+                                        {{--  <div class="flex content-between">  --}}
+                                            {{--  <p class="pt-2 text-gray-500 pr-5"> Added By: {{ car.user.name }}</p>  --}}
+                                            {{--  <p class="pt-2 text-gray-500"> Status: {{ car.status == 1? "Done": "Pending"}}</p>  --}}
+                                        {{--  </div>  --}}
+                                    </td>
+
+                                    <td>
+                                        <div>
+                                            @if(car.userId == auth.user.id)
+                                            <a href=" /cars/{{car.id}}/edit" class="bg-yellow-500 btn btn-primary">Edit</a>
+                                            <form class="" method="POST" action="/cars/{{car.id}}?_method=DELETE">
+                                                {{ csrfField() }}
+                                                <button class="bg-red-500  btn btn-danger">Delete</button>
+                                            </form>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+                        <form action="{{ route('CarUsersController.booking') }}" method="post">
+                            {{ csrfField() }}
+                            <input type="hidden" name="id" value="{{car.id}}" />
+                            <div>
+                                <label for="needs">Keperluan</label>
+                                <input type="text" name="needs" />
+                            </div>
+                            <div>
+                                <label for="duration">Durasi</label>
+                                <input type="text" name="duration" />
+                            </div>
+
+                            <div>
+                            <button type="submit">Book Now</button>
+                            </div>
+                        </form>
+        </div>
+    </div>
+@endsection

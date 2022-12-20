@@ -1,6 +1,8 @@
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import Car from 'App/Models/Car'
 import User from 'App/Models/User'
+import Order from 'App/Models/Order'
+import DetailOrder from 'App/Models/DetailOrder'
 
 export default class CarUsersController {
   public async index({ view }: HttpContextContract) {
@@ -25,6 +27,11 @@ export default class CarUsersController {
           needs: input.needs,
         },
       })
+
+      // test order & variant
+      // 1. inpu data to order table (include make invoice number)
+      // 2. input data to detail_order table
+
       response.redirect('/order')
     } catch (err) {
       response.redirect('/errors/server-error')

@@ -1,5 +1,6 @@
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import Database from '@ioc:Adonis/Lucid/Database'
+import { string } from '@ioc:Adonis/Core/Helpers'
 // import Car from 'App/Models/Car'
 // import User from 'App/Models/User'
 // import Order from 'App/Models/Order'
@@ -78,8 +79,8 @@ export default class OrdersController {
         this.padTo2Digits(now.getMonth() + 1),
         this.padTo2Digits(now.getDate()),
       ].join('')
-      const randomNumber = Math.floor(Math.random() * 100000000)
-      return 'INV/' + dateNow + '/RTL/' + randomNumber
+      const randomNumber = Math.floor(10000000 + Math.random() * 90000000)
+      return 'INV' + dateNow + 'RTL' + randomNumber
     } catch (err) {
       return null
     }
@@ -89,7 +90,24 @@ export default class OrdersController {
     return num.toString().padStart(2, '0')
   }
 
-  // public async rental_transaction({ auth, params, response }: HttpContextContract) {
-
-  // }
+  public async rental_transaction({ params, response }: HttpContextContract) {
+    // const user = await auth.authenticate()
+    // const input = request.only(['inv'])
+    const transct = await Database.from('orders')
+      .join('detail_orders', 'orders.id', '=', 'detail_orders.order_id')
+      .select('orders.customer_name')
+      .select('detail_orders.price')
+      .where('orders.invoice', params.inv)
+    try {
+      return response.status(200).json({
+        code: 200,
+        status: 'success',
+        data: {
+          transct: transct,
+        },
+      })
+    } catch (err) {
+      return response.status(500).json({ code: 500, status: 'error', message: err.message })
+    }
+  }
 }

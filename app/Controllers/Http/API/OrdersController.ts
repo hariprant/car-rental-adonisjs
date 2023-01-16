@@ -1,9 +1,5 @@
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import Database from '@ioc:Adonis/Lucid/Database'
-import { string } from '@ioc:Adonis/Core/Helpers'
-// import Car from 'App/Models/Car'
-// import User from 'App/Models/User'
-// import Order from 'App/Models/Order'
 
 export default class OrdersController {
   public async rental_order({ auth, request, response }: HttpContextContract) {
@@ -93,17 +89,26 @@ export default class OrdersController {
   public async rental_transaction({ params, response }: HttpContextContract) {
     // const user = await auth.authenticate()
     // const input = request.only(['inv'])
-    const transct = await Database.from('orders')
+    const order = await Database.from('orders')
       .join('detail_orders', 'orders.id', '=', 'detail_orders.order_id')
+      .join('cars', 'detail_orders.car_id', '=', 'cars.id')
       .select('orders.customer_name')
-      .select('detail_orders.price')
+      .select('detail_orders.qty')
+      .select('cars.name as car_name')
+      .where('orders.invoice', params.inv)
+
+    const variants = await Database.from('orders')
+      .join('order_variants', 'orders.id', '=', 'order_variants.order_id')
+      .join('variants', 'order_variants.variant_id', '=', 'variants.id')
+      .select('variants.name as variants')
       .where('orders.invoice', params.inv)
     try {
       return response.status(200).json({
         code: 200,
         status: 'success',
         data: {
-          transct: transct,
+          transct: order,
+          variants: variants,
         },
       })
     } catch (err) {

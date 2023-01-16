@@ -45,6 +45,7 @@ Route.group(() => {
     Route.resource('users', 'API/UsersController').apiOnly()
     Route.resource('cars', 'API/CarsController').apiOnly()
     Route.post('orders', 'API/OrdersController.rental_order')
+    Route.get('transactions', 'API/OrdersController.all_transaction')
     Route.get('transactions/:inv', 'API/OrdersController.rental_transaction')
 
     Route.post('caruser', 'API/CarUsersController.store')

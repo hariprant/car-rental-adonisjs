@@ -86,9 +86,30 @@ export default class OrdersController {
     return num.toString().padStart(2, '0')
   }
 
+  public async all_transaction({ auth, response }: HttpContextContract) {
+    const user = await auth.authenticate()
+    const order = await Database.from('orders')
+      .join('users', 'orders.user_id', '=', 'users.id')
+      .join('detail_orders', 'orders.id', '=', 'detail_orders.order_id')
+      .join('cars', 'detail_orders.car_id', '=', 'cars.id')
+      .select('orders.customer_name')
+      .select('detail_orders.qty')
+      .select('cars.name as car_name')
+      .where('users.id', user.id)
+
+    try {
+      return response.status(200).json({
+        code: 200,
+        status: 'success',
+        data: {
+          list_transct: order,
+        },
+      })
+    } catch (err) {
+      return response.status(500).json({ code: 500, status: 'error', message: err.message })
+    }
+  }
   public async rental_transaction({ params, response }: HttpContextContract) {
-    // const user = await auth.authenticate()
-    // const input = request.only(['inv'])
     const order = await Database.from('orders')
       .join('detail_orders', 'orders.id', '=', 'detail_orders.order_id')
       .join('cars', 'detail_orders.car_id', '=', 'cars.id')

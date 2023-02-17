@@ -1,8 +1,6 @@
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import Car from 'App/Models/Car'
-import User from 'App/Models/User'
-import Order from 'App/Models/Order'
-import DetailOrder from 'App/Models/DetailOrder'
+import Database from '@ioc:Adonis/Lucid/Database'
 
 export default class CarUsersController {
   public async index({ view }: HttpContextContract) {
@@ -15,53 +13,145 @@ export default class CarUsersController {
     return view.render('selected', { car })
   }
 
-  public async booking({ auth, request, response }: HttpContextContract) {
-    const input = request.only(['id', 'needs'])
+  public async rental_order({ auth, request, response }: HttpContextContract) {
+    const input = request.only(['car_id', 'duration', 'type', 'name', 'email', 'phone', 'address'])
+    console.log(input)
+
     try {
-      // const user = await User.findBy('id', 1)
       const user = await auth.authenticate()
-      const car = await Car.findByOrFail('id', input.id)
+      const car = await Database.from('cars').select('*').where('id', input.car_id)
 
-      await user?.related('cars').attach({
-        [car.id]: {
-          needs: input.needs,
-        },
-      })
+      const trx = await Database.transaction()
+      const inv = await this.generatedInvoice()
+      try {
+        // 1. input to order table
+        const order = await trx.insertQuery().table('orders').returning('id').insert({
+          user_id: user.id,
+          invoice: inv,
+          customer_name: input.name,
+          customer_email: input.email,
+          customer_phone: input.phone,
+          customer_address: input.address,
+          subtotal: car[0].price,
+        })
 
-      // test order & variant
-      // 1. inpu data to order table (include make invoice number)
-      // 2. input data to detail_order table
+        // 2. Input to detail_orders table
+        await trx.insertQuery().table('detail_orders').returning('id').insert({
+          order_id: order[0].id,
+          car_id: car[0].id,
+          qty: 1,
+          price: car[0].price,
+        })
 
-      response.redirect('/order')
+        // 3. Input to order_variants
+        await trx
+          .insertQuery()
+          .table('order_variants')
+          .returning('id')
+          .multiInsert([
+            {
+              order_id: order[0].id,
+              variant_id: input.duration,
+            },
+            {
+              order_id: order[0].id,
+              variant_id: input.type,
+            },
+          ])
+
+        await trx.commit()
+
+        // return response.status(200).json({
+        //   code: 200,
+        //   status: 'success',
+        //   data: {
+        //     user: user,
+        //     order: order,
+        //     detail: detailOrder,
+        //     variant: orderVariant,
+        //   },
+        // })
+        response.redirect('/mytransactions')
+      } catch (error) {
+        await trx.rollback()
+      }
     } catch (err) {
       response.redirect('/errors/server-error')
     }
   }
 
-  public async order({ auth, view, response }: HttpContextContract) {
+  private async generatedInvoice() {
+    try {
+      const now = new Date()
+      const dateNow = [
+        now.getFullYear(),
+        this.padTo2Digits(now.getMonth() + 1),
+        this.padTo2Digits(now.getDate()),
+      ].join('')
+      const randomNumber = Math.floor(10000000 + Math.random() * 90000000)
+      return 'INV' + dateNow + 'RTL' + randomNumber
+    } catch (err) {
+      return null
+    }
+  }
+
+  private padTo2Digits(num: number) {
+    return num.toString().padStart(2, '0')
+  }
+
+  public async all_transaction({ auth, response, view }: HttpContextContract) {
     try {
       const user = await auth.authenticate()
-      const order = await User.query().preload('cars').where('id', user.id).first()
-      const cars = order?.cars.map((x) => ({
-        name: x.name,
-        price: x.price,
-        needs: x.$extras.pivot_needs,
-      }))
+      const order = await Database.from('orders')
+        .join('users', 'orders.user_id', '=', 'users.id')
+        .join('detail_orders', 'orders.id', '=', 'detail_orders.order_id')
+        .join('cars', 'detail_orders.car_id', '=', 'cars.id')
+        .select('orders.customer_name')
+        .select('detail_orders.qty')
+        .select('cars.name as car_name')
+        .where('users.id', user.id)
+      // return response.status(200).json({
+      //   code: 200,
+      //   status: 'success',
+      //   data: {
+      //     list_transct: order,
+      //   },
+      // })
 
-      const car = Object.assign({}, cars)
+      return view.render('mytransactions', { orders: order })
+    } catch (err) {
+      console.log(err)
+      response.redirect('/errors/server-error')
+    }
+  }
 
-      if (Object.keys(car).length !== 0) {
-        return view.render('order', {
-          cars: {
-            name: car[0].name,
-            price: car[0].price,
-            needs: car[0].needs,
-          },
-        })
-      } else {
-        console.log('empty')
-      }
-    } catch {
+  public async rental_transaction({ params, response, view }: HttpContextContract) {
+    try {
+      const order = await Database.from('orders')
+        .join('detail_orders', 'orders.id', '=', 'detail_orders.order_id')
+        .join('cars', 'detail_orders.car_id', '=', 'cars.id')
+        .select('orders.customer_name')
+        .select('detail_orders.qty')
+        .select('cars.name as car_name')
+        .where('orders.invoice', params.inv)
+
+      const variants = await Database.from('orders')
+        .join('order_variants', 'orders.id', '=', 'order_variants.order_id')
+        .join('variants', 'order_variants.variant_id', '=', 'variants.id')
+        .select('variants.name as variants')
+        .where('orders.invoice', params.inv)
+      // return response.status(200).json({
+      //   code: 200,
+      //   status: 'success',
+      //   data: {
+      //     transct: order,
+      //     variants: variants,
+      //   },
+      // })
+
+      return view.render('transaction', { data: { order: order, variants: variants } })
+      // return view.render('transaction')
+    } catch (err) {
       response.redirect('/errors/server-error')
     }
   }

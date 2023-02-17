@@ -24,33 +24,6 @@ const databaseConfig: DatabaseConfig = {
   connections: {
     /*
     |--------------------------------------------------------------------------
-    | MySQL config
-    |--------------------------------------------------------------------------
-    |
-    | Configuration for MySQL database. Make sure to install the driver
-    | from npm when using this connection
-    |
-    | npm i mysql2
-    |
-    */
-    mysql: {
-      client: 'mysql2',
-      connection: {
-        host: Env.get('MYSQL_HOST'),
-        port: Env.get('MYSQL_PORT'),
-        user: Env.get('MYSQL_USER'),
-        password: Env.get('MYSQL_PASSWORD', ''),
-        database: Env.get('MYSQL_DB_NAME'),
-      },
-      migrations: {
-        naturalSort: true,
-      },
-      healthCheck: false,
-      debug: false,
-    },
-
-    /*
-    |--------------------------------------------------------------------------
     | PostgreSQL config
     |--------------------------------------------------------------------------
     |

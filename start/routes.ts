@@ -32,8 +32,9 @@ Route.post('login', 'AuthController.login')
 Route.group(() => {
   Route.get('home', 'CarUsersController.index').as('home')
   Route.get('selected/:id', 'CarUsersController.selected').as('selected')
-  Route.post('booking', 'CarUsersController.booking').as('booking')
-  Route.get('order', 'CarUsersController.order').as('order')
+  Route.post('orders', 'CarUsersController.rental_order').as('orders')
+  Route.get('mytransactions', 'CarUsersController.all_transaction').as('mytransactions')
+  Route.get('transactions/:inv', 'CarUsersController.rental_transaction').as('transaction')
   Route.get('logout', 'AuthController.logout')
 }).middleware('auth:web')
 
@@ -42,13 +43,9 @@ Route.group(() => {
   Route.post('login', 'API/AuthController.login')
 
   Route.group(() => {
-    Route.resource('users', 'API/UsersController').apiOnly()
     Route.resource('cars', 'API/CarsController').apiOnly()
     Route.post('orders', 'API/OrdersController.rental_order')
     Route.get('transactions', 'API/OrdersController.all_transaction')
     Route.get('transactions/:inv', 'API/OrdersController.rental_transaction')
-
-    Route.post('caruser', 'API/CarUsersController.store')
-    Route.get('caruser', 'API/CarUsersController.index')
   }).middleware('auth:api')
 }).prefix('/api/v1')

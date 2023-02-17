@@ -27,34 +27,38 @@
                                             {{--  <p class="pt-2 text-gray-500"> Status: {{ car.status == 1? "Done": "Pending"}}</p>  --}}
                                         {{--  </div>  --}}
                                     </td>
-
-                                    <td>
-                                        <div>
-                                            @if(car.userId == auth.user.id)
-                                            <a href=" /cars/{{car.id}}/edit" class="bg-yellow-500 btn btn-primary">Edit</a>
-                                            <form class="" method="POST" action="/cars/{{car.id}}?_method=DELETE">
-                                                {{ csrfField() }}
-                                                <button class="bg-red-500  btn btn-danger">Delete</button>
-                                            </form>
-                                            @endif
-                                        </div>
-                                    </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-                        <form action="{{ route('CarUsersController.booking') }}" method="post">
+                        <form action="{{ route('CarUsersController.rental_order') }}" method="post">
                             {{ csrfField() }}
-                            <input type="hidden" name="id" value="{{car.id}}" />
+                            <input type="hidden" name="car_id" value="{{car.id}}" />
                             <div>
-                                <label for="needs">Keperluan</label>
-                                <input type="text" name="needs" />
+                                <label for="needs">Durasi</label>
+                                <input type="text" name="duration" />
                             </div>
                             <div>
-                                <label for="duration">Durasi</label>
-                                <input type="text" name="duration" />
+                                <label for="duration">Jenis Sewa</label>
+                                <input type="text" name="type" />
+                            </div>
+                            <div>
+                                <label for="duration">Nama</label>
+                                <input type="text" name="name" />
+                            </div>
+                            <div>
+                                <label for="duration">Email</label>
+                                <input type="text" name="email" />
+                            </div>
+                            <div>
+                                <label for="duration">Phone</label>
+                                <input type="text" name="phone" />
+                            </div>
+                            <div>
+                                <label for="duration">Address</label>
+                                <input type="text" name="address" />
                             </div>
 
                             <div>

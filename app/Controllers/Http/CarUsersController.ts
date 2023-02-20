@@ -106,6 +106,7 @@ export default class CarUsersController {
         .join('users', 'orders.user_id', '=', 'users.id')
         .join('detail_orders', 'orders.id', '=', 'detail_orders.order_id')
         .join('cars', 'detail_orders.car_id', '=', 'cars.id')
+        .select('orders.invoice')
         .select('orders.customer_name')
         .select('detail_orders.qty')
         .select('cars.name as car_name')

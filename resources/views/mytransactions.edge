@@ -9,7 +9,7 @@
                     @each(order in orders)
                         <h3>{{order.customer_name}}</h3>
                         <p>{{order.car_name}}</p>
-                        
+                        <a href="{{ route('transaction', { inv : order.invoice }) }}" class="btn btn-sm btn-primary">Detail</a>
                     @endeach
                     </div>
                 </div>

@@ -2,7 +2,7 @@ import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import Car from 'App/Models/Car'
 import Database from '@ioc:Adonis/Lucid/Database'
 
-export default class CarUsersController {
+export default class OrdersController {
   public async index({ view }: HttpContextContract) {
     const cars = await Car.all()
     return view.render('home', { cars })
@@ -15,15 +15,19 @@ export default class CarUsersController {
 
   public async rental_order({ auth, request, response }: HttpContextContract) {
     const input = request.only(['car_id', 'duration', 'type', 'name', 'email', 'phone', 'address'])
-    console.log(input)
 
     try {
       const user = await auth.authenticate()
       const car = await Database.from('cars').select('*').where('id', input.car_id)
+      const drtnPrc = await Database.from('variants').select('price').where('id', input.duration)
+      const typPrc = await Database.from('variants').select('price').where('id', input.type)
 
       const trx = await Database.transaction()
       const inv = await this.generatedInvoice()
       try {
+        // 0. subtotal calculate
+        const total = car[0].price + drtnPrc[0].price + typPrc[0].price
+
         // 1. input to order table
         const order = await trx.insertQuery().table('orders').returning('id').insert({
           user_id: user.id,
@@ -32,7 +36,7 @@ export default class CarUsersController {
           customer_email: input.email,
           customer_phone: input.phone,
           customer_address: input.address,
-          subtotal: car[0].price,
+          subtotal: total,
         })
 
         // 2. Input to detail_orders table
@@ -61,16 +65,6 @@ export default class CarUsersController {
 
         await trx.commit()
 
-        // return response.status(200).json({
-        //   code: 200,
-        //   status: 'success',
-        //   data: {
-        //     user: user,
-        //     order: order,
-        //     detail: detailOrder,
-        //     variant: orderVariant,
-        //   },
-        // })
         response.redirect('/mytransactions')
       } catch (error) {
         await trx.rollback()
@@ -111,13 +105,6 @@ export default class CarUsersController {
         .select('detail_orders.qty')
         .select('cars.name as car_name')
         .where('users.id', user.id)
-      // return response.status(200).json({
-      //   code: 200,
-      //   status: 'success',
-      //   data: {
-      //     list_transct: order,
-      //   },
-      // })
 
       return view.render('mytransactions', { orders: order })
     } catch (err) {
@@ -141,14 +128,6 @@ export default class CarUsersController {
         .join('variants', 'order_variants.variant_id', '=', 'variants.id')
         .select('variants.name as variants')
         .where('orders.invoice', params.inv)
-      // return response.status(200).json({
-      //   code: 200,
-      //   status: 'success',
-      //   data: {
-      //     transct: order,
-      //     variants: variants,
-      //   },
-      // })
 
       return view.render('transaction', { data: { order: order, variants: variants } })
       // return view.render('transaction')

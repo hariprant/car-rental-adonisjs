@@ -33,7 +33,7 @@
                     </div>
                 </div>
             </div>
-                        <form action="{{ route('CarUsersController.rental_order') }}" method="post">
+                        <form action="{{ route('OrdersController.rental_order') }}" method="post">
                             {{ csrfField() }}
                             <input type="hidden" name="car_id" value="{{car.id}}" />
                             <div>

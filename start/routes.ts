@@ -30,11 +30,11 @@ Route.on('login').render('auth/login')
 Route.post('login', 'AuthController.login')
 
 Route.group(() => {
-  Route.get('home', 'CarUsersController.index').as('home')
-  Route.get('selected/:id', 'CarUsersController.selected').as('selected')
-  Route.post('orders', 'CarUsersController.rental_order').as('orders')
-  Route.get('mytransactions', 'CarUsersController.all_transaction').as('mytransactions')
-  Route.get('transactions/:inv', 'CarUsersController.rental_transaction').as('transaction')
+  Route.get('home', 'OrdersController.index').as('home')
+  Route.get('selected/:id', 'OrdersController.selected').as('selected')
+  Route.post('orders', 'OrdersController.rental_order').as('orders')
+  Route.get('mytransactions', 'OrdersController.all_transaction').as('mytransactions')
+  Route.get('transactions/:inv', 'OrdersController.rental_transaction').as('transaction')
   Route.get('logout', 'AuthController.logout')
 }).middleware('auth:web')
 
